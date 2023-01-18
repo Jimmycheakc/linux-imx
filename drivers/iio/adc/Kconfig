@@ -1298,4 +1298,7 @@ config XILINX_XADC
 	  The driver can also be build as a module. If so, the module will be called
 	  xilinx-xadc.
 
+config PAC193x
+	tristate "PAC193x Driver"
+
 endmenu
