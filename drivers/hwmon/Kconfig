@@ -1245,6 +1245,7 @@ config SENSORS_LM75
 		- Global Mixed-mode Technology (GMT) G751
 		- Maxim MAX6625 and MAX6626
 		- Microchip MCP980x
+		- Microchip AT30TS74
 		- National Semiconductor LM75, LM75A
 		- NXP's LM75A
 		- ST Microelectronics STDS75

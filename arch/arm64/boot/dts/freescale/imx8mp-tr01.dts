@@ -6,6 +6,7 @@
 /dts-v1/;
 
 #include <dt-bindings/usb/pd.h>
+#include <dt-bindings/clk/versaclock.h>
 #include "imx8mp.dtsi"
 
 / {
@@ -58,21 +59,11 @@
 			};
 		};
 	};
-};
 
-&flexspi {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_flexspi0>;
-	status = "okay";
-
-	flash0: mt25qu256aba@0 {
-		reg = <0>;
-		#address-cells = <1>;
-		#size-cells = <1>;
-		compatible = "jedec,spi-nor";
-		spi-max-frequency = <80000000>;
-		spi-tx-bus-width = <1>;
-		spi-rx-bus-width = <4>;
+	osc_10m_clk: osc-10m-clock {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <10000000>;
 	};
 };
 
@@ -112,15 +103,18 @@
 	};
 };
 
-&fec {
+&eqos {
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_fec>;
+	pinctrl-0 = <&pinctrl_eqos>;
 	phy-mode = "rgmii-id";
 	phy-handle = <&ethphy0>;
-	fsl,magic-packet;
+	snps,force_thresh_dma_mode;
+	snps,mtl-tx-config = <&mtl_tx_setup>;
+	snps,mtl-rx-config = <&mtl_rx_setup>;
 	status = "okay";
 
 	mdio {
+		compatible = "snps,dwmac-mdio";
 		#address-cells = <1>;
 		#size-cells = <0>;
 
@@ -128,11 +122,61 @@
 			compatible = "ethernet-phy-ieee802.3-c22";
 			reg = <1>;
 			eee-broken-1000t;
-			reset-gpios = <&gpio4 2 GPIO_ACTIVE_LOW>;
-			reset-assert-us = <10000>;
-			reset-deassert-us = <80000>;
-			realtek,aldps-enable;
 			realtek,clkout-disable;
+		};
+	};
+
+	mtl_tx_setup: tx-queues-config {
+		snps,tx-queues-to-use = <5>;
+		snps,tx-sched-sp;
+		queue0 {
+			snps,dcb-algorithm;
+			snps,priority = <0x1>;
+		};
+		queue1 {
+			snps,dcb-algorithm;
+			snps,priority = <0x2>;
+		};
+		queue2 {
+			snps,dcb-algorithm;
+			snps,priority = <0x4>;
+		};
+		queue3 {
+			snps,dcb-algorithm;
+			snps,priority = <0x8>;
+		};
+		queue4 {
+			snps,dcb-algorithm;
+			snps,priority = <0xf0>;
+		};
+	};
+	mtl_rx_setup: rx-queues-config {
+		snps,rx-queues-to-use = <5>;
+		snps,rx-sched-sp;
+		queue0 {
+			snps,dcb-algorithm;
+			snps,priority = <0x1>;
+			snps,map-to-dma-channel = <0>;
+		};
+		queue1 {
+			snps,dcb-algorithm;
+			snps,priority = <0x2>;
+			snps,map-to-dma-channel = <1>;
+		};
+		queue2 {
+			snps,dcb-algorithm;
+			snps,priority = <0x4>;
+			snps,map-to-dma-channel = <2>;
+		};
+		queue3 {
+			snps,dcb-algorithm;
+			snps,priority = <0x8>;
+			snps,map-to-dma-channel = <3>;
+		};
+		queue4 {
+			snps,dcb-algorithm;
+			snps,priority = <0xf0>;
+			snps,map-to-dma-channel = <4>;
 		};
 	};
 };
@@ -252,63 +296,28 @@
 		status = "okay";
 
 		ch1: channel@0 {
-			uohms-shunt-res = <100000>; /* shunt resistor is 4 mOhm */
+			uohms-shunt-res = <100000>; /* shunt resistor is 10 mOhm */
 			rail-name = "R1";
 			channel_enabled;
 			channel_index = <1>;
 		};
 
 		ch2: channel@1 {
-			uohms-shunt-res = <100000>; /* shunt resistor is 4 mOhm */
+			uohms-shunt-res = <100000>; /* shunt resistor is 10 mOhm */
 			rail-name = "R2";
 			channel_enabled;
 			channel_index = <2>;
 		};
 
 		ch3: channel@2 {
-			uohms-shunt-res = <100000>; /* shunt resistor is 4 mOhm */
+			uohms-shunt-res = <100000>; /* shunt resistor is 10 mOhm */
 			rail-name = "R3";
 			channel_enabled;
 			channel_index = <3>;
 		};
 
 		ch4: channel@3 {
-			uohms-shunt-res = <100000>; /* shunt resistor is 4 mOhm */
-			rail-name = "R4";
-			channel_enabled;
-			channel_index = <4>;
-		};
-	};
-
-	pac1934@11 {
-		compatible = "microchip,pac1934";
-		reg = <0x11>; /* Address to be confirmed */
-		samp-rate = <64>;
-		status = "okay";
-
-		ch1: channel@0 {
-			uohms-shunt-res = <100000>; /* shunt resistor is 4 mOhm */
-			rail-name = "R1";
-			channel_enabled;
-			channel_index = <1>;
-		};
-
-		ch2: channel@1 {
-			uohms-shunt-res = <100000>; /* shunt resistor is 4 mOhm */
-			rail-name = "R2";
-			channel_enabled;
-			channel_index = <2>;
-		};
-
-		ch3: channel@2 {
-			uohms-shunt-res = <100000>; /* shunt resistor is 4 mOhm */
-			rail-name = "R3";
-			channel_enabled;
-			channel_index = <3>;
-		};
-
-		ch4: channel@3 {
-			uohms-shunt-res = <100000>; /* shunt resistor is 4 mOhm */
+			uohms-shunt-res = <100000>; /* shunt resistor is 10 mOhm */
 			rail-name = "R4";
 			channel_enabled;
 			channel_index = <4>;
@@ -371,6 +380,13 @@
 		compatible = "atmel,24c04";
 		reg = <0x52>;
 	};
+
+	max31342: max31342@69 {
+		compatible = "maxim,max31342";
+		reg = <0x69>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <15 8>;
+	};
 };
 
 &i2c4 {
@@ -383,7 +399,7 @@
 		compatible = "idt,5p49v6965";
 		reg = <0x6a>;
 		#clock-cells = <1>;
-		clocks = <&osc_10m>;
+		clocks = <&osc_10m_clk>;
 		clock-names = "xin";
 
 		assigned-clocks = <&versaclock6_bb 1>,
@@ -415,6 +431,16 @@
 			idt,voltage-microvolt = <1800000>;
 			idt,slew-percent = <100>;
 		};
+	};
+
+	at30ts74_01: at30ts74_01@48 {
+		compatible = "microchip,at30ts74";
+		reg = <0x48>;
+	};
+
+	at30ts74_02: at30ts74_02@4a {
+		compatible = "microchip,at30ts74";
+		reg = <0x4a>;
 	};
 };
 
@@ -534,7 +560,7 @@
 		>;
 	};
 
-	pinctrl_fec: fecgrp {
+	pinctrl_eqos: eqosgrp {
 		fsl,pins = <
 			MX8MP_IOMUXC_ENET_MDC__ENET_QOS_MDC				0x3
 			MX8MP_IOMUXC_ENET_MDIO__ENET_QOS_MDIO				0x3
@@ -551,17 +577,6 @@
 			MX8MP_IOMUXC_ENET_TX_CTL__ENET_QOS_RGMII_TX_CTL			0x1f
 			MX8MP_IOMUXC_ENET_TXC__CCM_ENET_QOS_CLOCK_GENERATE_TX_CLK	0x1f
 			MX8MP_IOMUXC_SAI2_RXC__GPIO4_IO22				0x19
-		>;
-	};
-
-	pinctrl_flexspi0: flexspi0grp {
-		fsl,pins = <
-			MX8MP_IOMUXC_NAND_ALE__FLEXSPI_A_SCLK           0x1c2
-			MX8MP_IOMUXC_NAND_CE0_B__FLEXSPI_A_SS0_B        0x82
-			MX8MP_IOMUXC_NAND_DATA00__FLEXSPI_A_DATA00      0x82
-			MX8MP_IOMUXC_NAND_DATA01__FLEXSPI_A_DATA01      0x82
-			MX8MP_IOMUXC_NAND_DATA02__FLEXSPI_A_DATA02      0x82
-			MX8MP_IOMUXC_NAND_DATA03__FLEXSPI_A_DATA03      0x82
 		>;
 	};
 
@@ -592,7 +607,7 @@
 		>;
 	};
 
-	pinctrl_i2c3: i2c3grp {
+	pinctrl_i2c4: i2c4grp {
 		fsl,pins = <
 			MX8MP_IOMUXC_I2C4_SCL__I2C4_SCL		0x400001c2
 			MX8MP_IOMUXC_I2C4_SDA__I2C4_SDA		0x400001c2
